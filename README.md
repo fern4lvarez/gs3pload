@@ -25,7 +25,7 @@ $ go get github.com/fern4lvarez/gs3pload
 Configure
 ---------
 
-Create a `envs.json` file with desired environments:
+Create a `~/.gs3pload/envs.json` file with desired environments:
 
 ~~~
 [
