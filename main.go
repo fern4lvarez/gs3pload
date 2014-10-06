@@ -43,7 +43,7 @@ func setBucket(name string, environmentType string, environmentDomain string) st
 	switch name {
 	case "packages":
 		root = fmt.Sprintf("%s.%s", name, environmentDomain)
-	case "cert", "images", "stacks":
+	case "certs", "images", "stacks":
 		root = fmt.Sprintf("%s.%s", environmentDomain, name)
 	default:
 		root = name
@@ -67,6 +67,7 @@ func Execute(command []string) error {
 	return cmd.Run()
 }
 
+// Copy files to a given bucket and environment
 func Copy(config string, bucket string, files []string, environment Environment) error {
 	command := []string{"gsutil", "cp"}
 	command = append(command, files...)
@@ -76,6 +77,7 @@ func Copy(config string, bucket string, files []string, environment Environment)
 	return Execute(command)
 }
 
+// Public set public-read permissions for the given files
 func Public(config string, bucket string, files []string, environment Environment) error {
 	command := []string{"gsutil", "acl", "set", "public-read"}
 	for _, file := range files {
@@ -86,6 +88,7 @@ func Public(config string, bucket string, files []string, environment Environmen
 	return Execute(command)
 }
 
+// Push given files to multiple environments
 func Push(environments Environments, bucketName string, files []string, public bool) error {
 	for _, environment := range environments {
 		fmt.Printf("---> Pushing to %s environment...\n", environment.Name)
@@ -113,7 +116,7 @@ func main() {
 	usage := `gs3pload. Upload files to different S3 or Google Storage
 buckets at once.
 
-Bucket names "packages", "stacks" and "images" are reserved and resolved
+Bucket names "packages", "stacks", "certs" and "images" are reserved and resolved
 by environment domain.
 
 Usage:
