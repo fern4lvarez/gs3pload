@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,23 +15,6 @@ var (
 	ENVIRONMENTS_FILE = filepath.Join(HOME, ".gs3pload", "envs.json")
 	VERSION           = "0.0.1"
 )
-
-type Environment struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Domain string `json:"domain"`
-}
-
-type Environments []Environment
-
-func fetchEnvironments() Environments {
-	var environments Environments
-	b, errRead := ioutil.ReadFile(ENVIRONMENTS_FILE)
-	if errUnmarshal := json.Unmarshal(b, &environments); errRead != nil || errUnmarshal != nil {
-		return nil
-	}
-	return environments
-}
 
 func setBucket(name string, environmentType string, environmentDomain string) string {
 	var path, root string
@@ -137,8 +118,15 @@ Options:
 	fileNames := arguments["<name>"].([]string)
 	public := arguments["--public"].(bool)
 
+	environments := Environments{}
+	err := environments.Fetch()
+	if err != nil {
+		fmt.Errorf(err.Error())
+		return
+	}
+
 	if push {
-		err := Push(fetchEnvironments(), bucketName, fileNames, public)
+		err = Push(environments, bucketName, fileNames, public)
 		if err != nil {
 			fmt.Errorf(err.Error())
 			return
