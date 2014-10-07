@@ -6,9 +6,8 @@ import (
 )
 
 type Environment struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Domain string `json:"domain"`
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 type Environments []Environment

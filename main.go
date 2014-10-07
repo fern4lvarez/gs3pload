@@ -16,16 +16,16 @@ var (
 	VERSION           = "0.0.1"
 )
 
-func setBucket(name string, environmentType string, environmentDomain string) string {
+func setBucket(name string, environmentType string, environmentName string) string {
 	var path, root string
 
 	pathSplit := strings.SplitN(name, "/", 2)
 	name = pathSplit[0]
 	switch name {
 	case "packages":
-		root = fmt.Sprintf("%s.%s", name, environmentDomain)
+		root = fmt.Sprintf("%s.%s", name, environmentName)
 	case "certs", "images", "stacks":
-		root = fmt.Sprintf("%s.%s", environmentDomain, name)
+		root = fmt.Sprintf("%s.%s", environmentName, name)
 	default:
 		root = name
 	}
@@ -73,7 +73,7 @@ func Public(config string, bucket string, files []string, environment Environmen
 func Push(environments Environments, bucketName string, files []string, public bool) error {
 	for _, environment := range environments {
 		fmt.Printf("---> Pushing to %s environment...\n", environment.Name)
-		bucket := setBucket(bucketName, environment.Type, environment.Domain)
+		bucket := setBucket(bucketName, environment.Type, environment.Name)
 		config := fmt.Sprintf("%s.boto", filepath.Join(HOME, ".gs3pload", environment.Name))
 
 		err := Copy(config, bucket, files, environment)
@@ -121,14 +121,14 @@ Options:
 	environments := Environments{}
 	err := environments.Fetch()
 	if err != nil {
-		fmt.Errorf(err.Error())
+		fmt.Println(err)
 		return
 	}
 
 	if push {
 		err = Push(environments, bucketName, fileNames, public)
 		if err != nil {
-			fmt.Errorf(err.Error())
+			fmt.Println(err)
 			return
 		}
 	}

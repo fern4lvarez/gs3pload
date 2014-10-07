@@ -30,14 +30,12 @@ Create a `~/.gs3pload/envs.json` file with desired environments:
 ~~~
 [
 {
-    "name": "live",
-    "type": "s3",
-    "domain": "live.com"
+    "name": "live.com",
+    "type": "s3"
 },
 {
-    "name": "dev",
-    "type": "gs",
-    "domain": "dev.com"
+    "name": "dev.com",
+    "type": "gs"
 }
 ]
 ~~~
