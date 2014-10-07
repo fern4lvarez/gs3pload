@@ -113,7 +113,7 @@ func Push(environments Environments, bucketName string, files []string, public b
 }
 
 func main() {
-	usage := `gs3pload. Upload files to different S3 or Google Storage
+	usage := `gs3pload. Upload files to multiple S3 or Google Storage
 buckets at once.
 
 Bucket names "packages", "stacks", "certs" and "images" are reserved and resolved

@@ -3,7 +3,7 @@ gs3pload
 
 [Documentation online](http://godoc.org/github.com/fern4lvarez/gs3pload)
 
-**gs3pload** is a command line too too upload files to different S3 or Google Storage buckets at once.
+**gs3pload** is a command line tool to upload files to multiple S3 or Google Storage buckets at once.
 
 Prerequisites
 -------------
