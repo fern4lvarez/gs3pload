@@ -21,6 +21,8 @@ Install
 $ go get github.com/fern4lvarez/gs3pload
 ~~~
 
+or [download the binary file](http://gobuild.io/github.com/fern4lvarez/gs3pload) for your architecture.
+
 
 Configure
 ---------
