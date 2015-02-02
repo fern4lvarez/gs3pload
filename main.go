@@ -8,10 +8,11 @@ import (
 	"strings"
 
 	"github.com/docopt/docopt-go"
+	"github.com/mitchellh/go-homedir"
 )
 
 var (
-	HOME              = os.Getenv("HOME")
+	HOME, _           = homedir.Dir()
 	ENVIRONMENTS_FILE = filepath.Join(HOME, ".gs3pload", "envs.json")
 	VERSION           = "0.0.1"
 )
