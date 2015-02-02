@@ -76,7 +76,7 @@ Options:
   -h --help        Show help.
   -p --public      Set files as public.
   -r --recursive   Do a recursive copy.
-  -b --backup      Create backup of pushed files if they existed.
+  -b --backup      Create backup of pushed files if they exist.
   -v --version     Show version.
 
 ```
