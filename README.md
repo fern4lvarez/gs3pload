@@ -41,11 +41,10 @@ Create a `~/.gs3pload/envs.json` file with desired environments:
 ]
 ~~~
 
-
 ### Amazon S3 Environments
 
 For each environment based on S3 you need to create a file called `<Environment Name>.boto`
-inside the `.gs3pload` directory with this format, fulfilling the required credentials:
+inside the `.gs3pload` directory with this format, fulfilling the required credentials (see https://github.com/fern4lvarez/gs3pload/issues/1):
 
 ~~~
 [Credentials]
@@ -54,7 +53,6 @@ aws_secret_access_key = <PLACE YOUR ACCESS KEY HERE>
 
 [Boto]
 https_validate_certificates = False
-
 ~~~
 
 ### Google Storage Environments
@@ -67,18 +65,35 @@ BOTO_CONFIG=~/.gs3pload/<Environment Name>.boto gsutil config
 
 
 ##Usage
--------
+
 ```
 Usage:
-  gs3pload push <bucket> <name>... [-p | --public]
+  gs3pload push <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
   gs3pload -h | --help
   gs3pload -v | --version
 
 Options:
   -h --help        Show help.
   -p --public      Set files as public.
+  -r --recursive   Do a recursive copy.
+  -b --backup      Create backup of pushed files if they existed.
   -v --version     Show version.
+
 ```
+
+
+## Development
+
+This repository includes a ready-to-use Vagrant box that provides the required environment
+to work on development and testing of `gs3pload`:
+
+~~~
+$ vagrant up
+$ vagrant ssh
+$ sudo su
+$ gs3pload
+~~~
+
 
 ##License
 ---------
