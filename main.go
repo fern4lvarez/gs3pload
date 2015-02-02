@@ -45,13 +45,15 @@ func Execute(command []string) error {
 	cmd := exec.Command(command[0], command[1:]...)
 
 	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
 // Copy files to a given bucket and environment
-func Copy(config string, bucket string, files []string, environment Environment) error {
+func Copy(config string, bucket string, files []string, recursive bool, environment Environment) error {
 	command := []string{"gsutil", "cp"}
+	if recursive {
+		command = append(command, "-R")
+	}
 	command = append(command, files...)
 	command = append(command, bucket)
 
@@ -60,7 +62,7 @@ func Copy(config string, bucket string, files []string, environment Environment)
 }
 
 // Public set public-read permissions for the given files
-func Public(config string, bucket string, files []string, environment Environment) error {
+func Public(config string, bucket string, files []string) error {
 	command := []string{"gsutil", "acl", "set", "public-read"}
 	for _, file := range files {
 		filePath := fmt.Sprintf("%s%s", bucket, file)
@@ -70,22 +72,50 @@ func Public(config string, bucket string, files []string, environment Environmen
 	return Execute(command)
 }
 
+// DaisyChain copy an object from one path to another, where these
+// can belong to different buckets or environments
+func DaisyChain(config string, originPath, destPath string, recursive bool) error {
+	command := []string{"gsutil", "cp", "-D", "-p"}
+	if recursive {
+		command = append(command, "-R")
+	}
+	command = append(command, originPath)
+	command = append(command, destPath)
+	os.Setenv("BOTO_CONFIG", config)
+	return Execute(command)
+}
+
+// Backup given files within the same bucket with a .bak extension
+func Backup(config string, files []string, bucket string, recursive bool) {
+	fmt.Printf("---> Creating backups on %s...\n", bucket)
+	for _, file := range files {
+		filePath := fmt.Sprintf("%s%s", bucket, file)
+		backupPath := fmt.Sprintf("%s%s%s", bucket, file, ".bak")
+		if err := DaisyChain(config, filePath, backupPath, recursive); err != nil {
+			fmt.Printf("Skipping backup of %s (Did it exist before?). \n", filePath)
+			continue
+		}
+	}
+}
+
 // Push given files to multiple environments
-func Push(environments Environments, bucketName string, files []string, public bool) error {
+func Push(environments Environments, bucketName string, files []string, recursive, public, backup bool) error {
 	for _, environment := range environments {
 		fmt.Printf("---> Pushing to %s environment...\n", environment.Name)
 		bucket := setBucket(bucketName, environment.Type, environment.Name)
 		config := fmt.Sprintf("%s.boto", filepath.Join(HOME, ".gs3pload", environment.Name))
 
-		err := Copy(config, bucket, files, environment)
-		if err != nil {
+		if backup {
+			Backup(config, files, bucket, recursive)
+		}
+
+		if err := Copy(config, bucket, files, recursive, environment); err != nil {
 			fmt.Printf("Push failed on %s. %s\n", environment.Name, err)
 			continue
 		}
 
 		if public {
-			err = Public(config, bucket, files, environment)
-			if err != nil {
+			if err := Public(config, bucket, files); err != nil {
 				fmt.Printf("Set as public failed on %s. %s\n", environment.Name, err)
 				continue
 			}
@@ -102,13 +132,15 @@ Bucket names "packages", "stacks", "certs" and "images" are reserved and resolve
 by environment domain.
 
 Usage:
-  gs3pload push <bucket> <name>... [-p | --public]
+  gs3pload push <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
   gs3pload -h | --help
   gs3pload -v | --version
 
 Options:
   -h --help        Show help.
   -p --public      Set files as public.
+  -r --recursive   Do a recursive copy.
+  -b --backup      Create backup of pushed files if they existed.
   -v --version     Show version.
 `
 
@@ -117,7 +149,9 @@ Options:
 	push := arguments["push"].(bool)
 	bucketName := arguments["<bucket>"].(string)
 	fileNames := arguments["<name>"].([]string)
+	recursive := arguments["--recursive"].(bool)
 	public := arguments["--public"].(bool)
+	backup := arguments["--backup"].(bool)
 
 	environments := Environments{}
 	err := environments.Fetch()
@@ -127,7 +161,7 @@ Options:
 	}
 
 	if push {
-		err = Push(environments, bucketName, fileNames, public)
+		err = Push(environments, bucketName, fileNames, recursive, public, backup)
 		if err != nil {
 			fmt.Println(err)
 			return
