@@ -58,7 +58,9 @@ func Copy(config string, bucket string, files []string, recursive bool, environm
 	command = append(command, files...)
 	command = append(command, bucket)
 
-	os.Setenv("BOTO_CONFIG", config)
+	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+		return err
+	}
 	return Execute(command)
 }
 
@@ -69,7 +71,9 @@ func Public(config string, bucket string, files []string) error {
 		filePath := fmt.Sprintf("%s%s", bucket, file)
 		command = append(command, filePath)
 	}
-	os.Setenv("BOTO_CONFIG", config)
+	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+		return err
+	}
 	return Execute(command)
 }
 
@@ -82,7 +86,9 @@ func DaisyChain(config string, originPath, destPath string, recursive bool) erro
 	}
 	command = append(command, originPath)
 	command = append(command, destPath)
-	os.Setenv("BOTO_CONFIG", config)
+	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+		return err
+	}
 	return Execute(command)
 }
 
