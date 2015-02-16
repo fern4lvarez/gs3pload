@@ -12,10 +12,10 @@ type Environment struct {
 
 type Environments []Environment
 
-func (environments *Environments) Fetch(file interface{}) error {
+func (environments *Environments) Fetch(envs interface{}) error {
 	environmentsFile := ENVIRONMENTS_FILE
-	if file != nil {
-		environmentsFile = file.(string)
+	if envs != nil {
+		environmentsFile = envs.(string)
 	}
 
 	b, err := ioutil.ReadFile(environmentsFile)
