@@ -133,12 +133,13 @@ Bucket names "packages", "stacks", "certs" and "images" are reserved and resolve
 by environment domain.
 
 Usage:
-  gs3pload push <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
+  gs3pload push [--config <file>] <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
   gs3pload -h | --help
   gs3pload -v | --version
 
 Options:
   -h --help        Show help.
+  --config <file>  Use a custom environments configuration.
   -p --public      Set files as public.
   -r --recursive   Do a recursive copy.
   -b --backup      Create backup of pushed files if they exist.
@@ -150,12 +151,13 @@ Options:
 	push := arguments["push"].(bool)
 	bucketName := arguments["<bucket>"].(string)
 	fileNames := arguments["<name>"].([]string)
+	config := arguments["--config"]
 	recursive := arguments["--recursive"].(bool)
 	public := arguments["--public"].(bool)
 	backup := arguments["--backup"].(bool)
 
 	environments := Environments{}
-	err := environments.Fetch()
+	err := environments.Fetch(config)
 	if err != nil {
 		fmt.Println(err)
 		return

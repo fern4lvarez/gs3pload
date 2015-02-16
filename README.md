@@ -41,6 +41,13 @@ Create a `~/.gs3pload/envs.json` file with desired environments:
 ]
 ~~~
 
+If you want to use a custom environments file, you can use the `--config` flag:
+
+~~~
+$ gs3pload push --custom /path/to/mycustomenvs.json bucket file
+~~~
+
+
 ### Amazon S3 Environments
 
 For each environment based on S3 you need to create a file called `<Environment Name>.boto`
