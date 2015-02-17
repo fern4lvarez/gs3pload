@@ -29,3 +29,11 @@ func (environments *Environments) Fetch(envs interface{}) error {
 
 	return nil
 }
+
+func (environment *Environment) getBucketType() string {
+	if environment.Type == "s3" || environment.Type == "gs" {
+		return "gsutil"
+	}
+
+	return "swift"
+}

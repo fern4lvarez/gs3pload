@@ -51,54 +51,44 @@ func Execute(command []string) error {
 
 // Copy files to a given bucket and environment
 func Copy(config string, bucket string, files []string, recursive bool, environment Environment) error {
-	command := []string{"gsutil", "cp"}
-	if recursive {
-		command = append(command, "-R")
-	}
-	command = append(command, files...)
-	command = append(command, bucket)
+	command := NewCommand(environment.getBucketType())
+	command.Copy(bucket, files, recursive)
 
 	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
 		return err
 	}
-	return Execute(command)
+	return Execute(command.Base)
 }
 
 // Public set public-read permissions for the given files
-func Public(config string, bucket string, files []string) error {
-	command := []string{"gsutil", "acl", "set", "public-read"}
-	for _, file := range files {
-		filePath := fmt.Sprintf("%s%s", bucket, file)
-		command = append(command, filePath)
-	}
+func Public(config string, bucket string, files []string, environment Environment) error {
+	command := NewCommand(environment.getBucketType())
+	command.Public(bucket, files)
+
 	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
 		return err
 	}
-	return Execute(command)
+	return Execute(command.Base)
 }
 
 // DaisyChain copy an object from one path to another, where these
 // can belong to different buckets or environments
-func DaisyChain(config string, originPath, destPath string, recursive bool) error {
-	command := []string{"gsutil", "cp", "-D", "-p"}
-	if recursive {
-		command = append(command, "-R")
-	}
-	command = append(command, originPath)
-	command = append(command, destPath)
+func DaisyChain(config string, originPath, destPath string, recursive bool, environment Environment) error {
+	command := NewCommand(environment.getBucketType())
+	command.DaisyChain(originPath, destPath, recursive)
 	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
 		return err
 	}
-	return Execute(command)
+	return Execute(command.Base)
 }
 
 // Backup given files within the same bucket with a .bak extension
-func Backup(config string, files []string, bucket string, recursive bool) {
+func Backup(config string, files []string, bucket string, recursive bool, environment Environment) {
 	fmt.Printf("---> Creating backups on %s...\n", bucket)
 	for _, file := range files {
 		filePath := fmt.Sprintf("%s%s", bucket, file)
 		backupPath := fmt.Sprintf("%s%s%s", bucket, file, ".bak")
-		if err := DaisyChain(config, filePath, backupPath, recursive); err != nil {
+		if err := DaisyChain(config, filePath, backupPath, recursive, environment); err != nil {
 			fmt.Printf("Skipping backup of %s (Did it exist before?). \n", filePath)
 			continue
 		}
@@ -114,7 +104,7 @@ func Push(environments Environments, envName string, bucketName string, files []
 			config := fmt.Sprintf("%s.boto", filepath.Join(HOME, ".gs3pload", environment.Name))
 
 			if backup {
-				Backup(config, files, bucket, recursive)
+				Backup(config, files, bucket, recursive, environment)
 			}
 
 			if err := Copy(config, bucket, files, recursive, environment); err != nil {
@@ -123,7 +113,7 @@ func Push(environments Environments, envName string, bucketName string, files []
 			}
 
 			if public {
-				if err := Public(config, bucket, files); err != nil {
+				if err := Public(config, bucket, files, environment); err != nil {
 					fmt.Printf("Set as public failed on %s. %s\n", environment.Name, err)
 					continue
 				}
