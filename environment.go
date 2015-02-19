@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 )
 
 type Environment struct {
@@ -30,7 +31,17 @@ func (environments *Environments) Fetch(envs interface{}) error {
 	return nil
 }
 
-func (environment *Environment) getBucketType() string {
+func (environment *Environment) Prepare(file string) error {
+	if environment.getBackend() == "gsutil" {
+		if err := os.Setenv("BOTO_CONFIG", file); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (environment *Environment) getBackend() string {
 	if environment.Type == "s3" || environment.Type == "gs" {
 		return "gsutil"
 	}

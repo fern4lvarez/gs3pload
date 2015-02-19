@@ -51,10 +51,10 @@ func Execute(command []string) error {
 
 // Copy files to a given bucket and environment
 func Copy(config string, bucket string, files []string, recursive bool, environment Environment) error {
-	command := NewCommand(environment.getBucketType())
+	command := NewCommand(environment.getBackend())
 	command.Copy(bucket, files, recursive)
 
-	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+	if err := environment.Prepare(config); err != nil {
 		return err
 	}
 	return Execute(command.Base)
@@ -62,10 +62,10 @@ func Copy(config string, bucket string, files []string, recursive bool, environm
 
 // Public set public-read permissions for the given files
 func Public(config string, bucket string, files []string, environment Environment) error {
-	command := NewCommand(environment.getBucketType())
+	command := NewCommand(environment.getBackend())
 	command.Public(bucket, files)
 
-	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+	if err := environment.Prepare(config); err != nil {
 		return err
 	}
 	return Execute(command.Base)
@@ -74,9 +74,10 @@ func Public(config string, bucket string, files []string, environment Environmen
 // DaisyChain copy an object from one path to another, where these
 // can belong to different buckets or environments
 func DaisyChain(config string, originPath, destPath string, recursive bool, environment Environment) error {
-	command := NewCommand(environment.getBucketType())
+	command := NewCommand(environment.getBackend())
 	command.DaisyChain(originPath, destPath, recursive)
-	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+
+	if err := environment.Prepare(config); err != nil {
 		return err
 	}
 	return Execute(command.Base)
