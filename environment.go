@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+
+	"github.com/fern4lvarez/goexport"
 )
 
 type Environment struct {
@@ -36,6 +38,10 @@ func (environment *Environment) Prepare(file string) error {
 		if err := os.Setenv("BOTO_CONFIG", file); err != nil {
 			return err
 		}
+	}
+
+	if err := goexport.Do(file); err != nil {
+		return err
 	}
 
 	return nil

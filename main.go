@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -37,16 +35,11 @@ func setBucket(name string, environmentType string, environmentName string) stri
 		path = root
 	}
 
+	if environmentType == "swift" {
+		return path
+	}
+
 	return fmt.Sprintf("%s://%s/", environmentType, path)
-}
-
-// Execute executes a regular command splitted in strings
-func Execute(command []string) error {
-	cmd := exec.Command(command[0], command[1:]...)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 // Copy files to a given bucket and environment
@@ -57,7 +50,8 @@ func Copy(config string, bucket string, files []string, recursive bool, environm
 	if err := environment.Prepare(config); err != nil {
 		return err
 	}
-	return Execute(command.Base)
+
+	return command.Execute()
 }
 
 // Public set public-read permissions for the given files
@@ -68,7 +62,8 @@ func Public(config string, bucket string, files []string, environment Environmen
 	if err := environment.Prepare(config); err != nil {
 		return err
 	}
-	return Execute(command.Base)
+
+	return command.Execute()
 }
 
 // DaisyChain copy an object from one path to another, where these
@@ -80,7 +75,7 @@ func DaisyChain(config string, originPath, destPath string, recursive bool, envi
 	if err := environment.Prepare(config); err != nil {
 		return err
 	}
-	return Execute(command.Base)
+	return command.Execute()
 }
 
 // Backup given files within the same bucket with a .bak extension
