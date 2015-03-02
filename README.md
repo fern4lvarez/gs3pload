@@ -41,12 +41,19 @@ Create a `~/.gs3pload/envs.json` file with desired environments:
 ]
 ~~~
 
-If you want to use a custom environments file, you can use the `--config` flag:
+If you want to use a custom environments file, you can use the `--envs` flag:
 
 ~~~
-$ gs3pload push --custom /path/to/mycustomenvs.json bucket file
+$ gs3pload push --envs /path/to/mycustomenvs.json bucket file
 ~~~
 
+If for some reason you want to push only to single environment, use `--env` flag:
+
+~~~
+$ gs3pload push --env ENV_NAME bucket file
+~~~
+
+where `ENV_NAME` needs to be defined in default or custom config file.
 
 ### Amazon S3 Environments
 
@@ -75,12 +82,14 @@ BOTO_CONFIG=~/.gs3pload/<Environment Name>.boto gsutil config
 
 ```
 Usage:
-  gs3pload push <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
+  gs3pload push [--envs <file>] [--env <name>] <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
   gs3pload -h | --help
   gs3pload -v | --version
 
 Options:
   -h --help        Show help.
+  --envs <file>    Use a custom environments configuration.
+  -e --env <name>  Environment name.
   -p --public      Set files as public.
   -r --recursive   Do a recursive copy.
   -b --backup      Create backup of pushed files if they exist.
