@@ -106,25 +106,27 @@ func Backup(config string, files []string, bucket string, recursive bool) {
 }
 
 // Push given files to multiple environments
-func Push(environments Environments, bucketName string, files []string, recursive, public, backup bool) error {
+func Push(environments Environments, envName string, bucketName string, files []string, recursive, public, backup bool) error {
 	for _, environment := range environments {
-		fmt.Printf("---> Pushing to %s environment...\n", environment.Name)
-		bucket := setBucket(bucketName, environment.Type, environment.Name)
-		config := fmt.Sprintf("%s.boto", filepath.Join(HOME, ".gs3pload", environment.Name))
+		if envName == "" || envName == environment.Name {
+			fmt.Printf("---> Pushing to %s environment...\n", environment.Name)
+			bucket := setBucket(bucketName, environment.Type, environment.Name)
+			config := fmt.Sprintf("%s.boto", filepath.Join(HOME, ".gs3pload", environment.Name))
 
-		if backup {
-			Backup(config, files, bucket, recursive)
-		}
+			if backup {
+				Backup(config, files, bucket, recursive)
+			}
 
-		if err := Copy(config, bucket, files, recursive, environment); err != nil {
-			fmt.Printf("Push failed on %s. %s\n", environment.Name, err)
-			continue
-		}
-
-		if public {
-			if err := Public(config, bucket, files); err != nil {
-				fmt.Printf("Set as public failed on %s. %s\n", environment.Name, err)
+			if err := Copy(config, bucket, files, recursive, environment); err != nil {
+				fmt.Printf("Push failed on %s. %s\n", environment.Name, err)
 				continue
+			}
+
+			if public {
+				if err := Public(config, bucket, files); err != nil {
+					fmt.Printf("Set as public failed on %s. %s\n", environment.Name, err)
+					continue
+				}
 			}
 		}
 	}
@@ -139,13 +141,14 @@ Bucket names "packages", "stacks", "certs" and "images" are reserved and resolve
 by environment domain.
 
 Usage:
-  gs3pload push [--envs <file>] <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
+  gs3pload push [--envs <file>] [--env <name>] <bucket> <name>... [-r | --recursive] [-p | --public] [-b | --backup]
   gs3pload -h | --help
   gs3pload -v | --version
 
 Options:
   -h --help        Show help.
-  --envs <file>  Use a custom environments configuration.
+  --envs <file>    Use a custom environments configuration.
+  -e --env <name>  Environment name [default: ].
   -p --public      Set files as public.
   -r --recursive   Do a recursive copy.
   -b --backup      Create backup of pushed files if they exist.
@@ -158,6 +161,7 @@ Options:
 	bucketName := arguments["<bucket>"].(string)
 	fileNames := arguments["<name>"].([]string)
 	envs := arguments["--envs"]
+	envName := arguments["--env"].(string)
 	recursive := arguments["--recursive"].(bool)
 	public := arguments["--public"].(bool)
 	backup := arguments["--backup"].(bool)
@@ -170,7 +174,7 @@ Options:
 	}
 
 	if push {
-		err = Push(environments, bucketName, fileNames, recursive, public, backup)
+		err = Push(environments, envName, bucketName, fileNames, recursive, public, backup)
 		if err != nil {
 			fmt.Println(err)
 			return
