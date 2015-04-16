@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -37,68 +35,56 @@ func setBucket(name string, environmentType string, environmentName string) stri
 		path = root
 	}
 
+	if environmentType == "swift" {
+		return path
+	}
+
 	return fmt.Sprintf("%s://%s/", environmentType, path)
-}
-
-// Execute executes a regular command splitted in strings
-func Execute(command []string) error {
-	cmd := exec.Command(command[0], command[1:]...)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }
 
 // Copy files to a given bucket and environment
 func Copy(config string, bucket string, files []string, recursive bool, environment Environment) error {
-	command := []string{"gsutil", "cp"}
-	if recursive {
-		command = append(command, "-R")
-	}
-	command = append(command, files...)
-	command = append(command, bucket)
+	command := NewCommand(environment.getBackend())
+	command.Copy(bucket, files, recursive)
 
-	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+	if err := environment.Prepare(config); err != nil {
 		return err
 	}
-	return Execute(command)
+
+	return command.Execute()
 }
 
 // Public set public-read permissions for the given files
-func Public(config string, bucket string, files []string) error {
-	command := []string{"gsutil", "acl", "set", "public-read"}
-	for _, file := range files {
-		filePath := fmt.Sprintf("%s%s", bucket, file)
-		command = append(command, filePath)
-	}
-	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+func Public(config string, bucket string, files []string, environment Environment) error {
+	command := NewCommand(environment.getBackend())
+	command.Public(bucket, files)
+
+	if err := environment.Prepare(config); err != nil {
 		return err
 	}
-	return Execute(command)
+
+	return command.Execute()
 }
 
 // DaisyChain copy an object from one path to another, where these
 // can belong to different buckets or environments
-func DaisyChain(config string, originPath, destPath string, recursive bool) error {
-	command := []string{"gsutil", "cp", "-D", "-p"}
-	if recursive {
-		command = append(command, "-R")
-	}
-	command = append(command, originPath)
-	command = append(command, destPath)
-	if err := os.Setenv("BOTO_CONFIG", config); err != nil {
+func DaisyChain(config string, originPath, destPath string, recursive bool, environment Environment) error {
+	command := NewCommand(environment.getBackend())
+	command.DaisyChain(originPath, destPath, recursive)
+
+	if err := environment.Prepare(config); err != nil {
 		return err
 	}
-	return Execute(command)
+	return command.Execute()
 }
 
 // Backup given files within the same bucket with a .bak extension
-func Backup(config string, files []string, bucket string, recursive bool) {
+func Backup(config string, files []string, bucket string, recursive bool, environment Environment) {
 	fmt.Printf("---> Creating backups on %s...\n", bucket)
 	for _, file := range files {
 		filePath := fmt.Sprintf("%s%s", bucket, file)
 		backupPath := fmt.Sprintf("%s%s%s", bucket, file, ".bak")
-		if err := DaisyChain(config, filePath, backupPath, recursive); err != nil {
+		if err := DaisyChain(config, filePath, backupPath, recursive, environment); err != nil {
 			fmt.Printf("Skipping backup of %s (Did it exist before?). \n", filePath)
 			continue
 		}
@@ -114,7 +100,7 @@ func Push(environments Environments, envName string, bucketName string, files []
 			config := fmt.Sprintf("%s.boto", filepath.Join(HOME, ".gs3pload", environment.Name))
 
 			if backup {
-				Backup(config, files, bucket, recursive)
+				Backup(config, files, bucket, recursive, environment)
 			}
 
 			if err := Copy(config, bucket, files, recursive, environment); err != nil {
@@ -123,7 +109,7 @@ func Push(environments Environments, envName string, bucketName string, files []
 			}
 
 			if public {
-				if err := Public(config, bucket, files); err != nil {
+				if err := Public(config, bucket, files, environment); err != nil {
 					fmt.Printf("Set as public failed on %s. %s\n", environment.Name, err)
 					continue
 				}

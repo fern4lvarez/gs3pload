@@ -6,7 +6,7 @@ apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y -q \
 	python-dev python-pip git
 
-pip install gsutil
+pip install gsutil python-swiftclient python-keystoneclient
 
 GOVERSION=1.4.1
 FILENAME="godeb-amd64.tar.gz"
